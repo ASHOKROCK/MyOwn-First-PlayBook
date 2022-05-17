@@ -1,0 +1,127 @@
+---
+- hosts: all
+  become_user: root
+  become_method: sudo
+  remote_user: root
+  gather_facts: yes
+  tasks:
+    - ping:
+    - hostname:
+        name: web01
+    
+    - name: ensure a list of packages installed
+      yum:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - httpd
+        - httpd-tools
+    - name: install ntpdate
+      package:
+        name: ntpdate
+        state: present
+    - name: install ntpdate
+      package:
+        name: nginx
+        state: present
+    - name: install ntpdate
+      package:
+        name: httpd,git
+        state: present
+    - name: Add host to group 'just_created' with variable foo=42
+      add_host:
+        name: '10.1.1.10'
+        groups: just_created
+        foo: 42
+    - name: Add host to multiple groups
+      add_host:
+        hostname: '10.2.1.20'
+        groups:
+          - DB
+          - just_created
+    - name: ensure a list of packages installed
+      yum:
+        name: "{{ packages }}"
+      vars:
+        packages:
+          - git
+          - maven
+          - zip
+          - traceroute
+          - unzip
+    - name: install the nginx rpm from a remote repo
+      yum:
+        name: http://nginx.org/packages/centos/6/noarch/RPMS/nginx-release-centos-6-0.el6.ngx.noarch.rpm
+        state: present
+   
+    - name: Install package with multiple repos enabled
+      yum:
+        name: sos
+        enablerepo: "epel,ol7_latest"
+    - name: Install a list of packages
+      yum:
+        name:
+          - nginx
+          - postgresql
+          - postgresql-server
+        state: present
+    - name: Download the nginx package but do not install it
+      yum:
+        name:
+          - nginx
+        state: latest
+    - name: Add repository
+      yum_repository:
+        name: epel
+        description: EPEL YUM repo
+        baseurl: https://download.fedoraproject.org/pub/epel/$releasever/$basearch/
+    - name: Add multiple repositories into the same file (1/2)
+      yum_repository:
+        name: epel
+        description: EPEL YUM repo
+        file: external_repos
+        baseurl: https://download.fedoraproject.org/pub/epel/$releasever/$basearch/
+        gpgcheck: no
+    - name: yum-clean-metadata
+      command: yum clean metadata
+      args:
+        warn: no
+    - name: Add multiple repositories into the same file (2/2)
+      yum_repository:
+        name: rpmforge
+        description: RPMforge YUM repo
+        file: external_repos
+        baseurl: http://apt.sw.be/redhat/el7/en/$basearch/rpmforge
+        mirrorlist: http://mirrorlist.repoforge.org/el7/mirrors-rpmforge
+        enabled: no
+    - name: install the latest version of Apache and MariaDB
+      package:
+        name:
+          - httpd
+          - git
+        state: latest
+    - name: Download foo.conf
+      get_url:
+        url: http://ipv4.download.thinkbroadband.com/20MB.zip
+        dest: /opt/newdir1/
+        mode: '0440'
+    - name: Download file and force basic auth
+      get_url:
+        url: http://ipv4.download.thinkbroadband.com/50MB.zip
+        dest: /opt/newdir2/ashok
+        force_basic_auth: yes
+    - name: Check that you can connect (GET) to a page and it returns a status 200
+      uri:
+        url: http://212.183.159.230/20MB.zip
+    - name: Remove repository (and clean up left-over metadata)
+      yum_repository:
+        name: epel
+        state: absent
+      notify: yum-clean-metadata
+  handlers:
+    - name: yum-clean-metadata
+      yum:
+        name: epel
+        state: absent 
+    
+

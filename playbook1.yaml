@@ -1,0 +1,17 @@
+---
+- hosts: all
+  become_user: root
+  become_method: sudo
+  remote_user: root
+  gather_facts: yes
+  tasks:
+    - name: Install packages
+      yum:
+        name: "{{item}}"
+        state: present
+      loop:
+        - gcc
+        - traceroute
+        - git 
+        - maven
+        - nginx 
